@@ -22,10 +22,8 @@
     </div>
 
     <script>
-      const url = "ec-course-api.hexschool.io/v2"; // 請加入站點
-      const path = "jinliu"; // 請加入個人 API Path
-
-      // #1 如何串接 API 資料
+      const url = "https://ec-course-api.hexschool.io/v2"; // Base API URL
+      const path = "jinliu"; // Your personal API Path
 
       const emailInput = document.querySelector("#email");
       const pwInput = document.querySelector("#password");
@@ -35,40 +33,62 @@
       const addProductBtn = document.querySelector("#addProduct");
       const delProductBtn = document.querySelector("#delProduct");
 
+      let token = ""; // Store the token
+
       loginBtn.addEventListener("click", login);
 
       function login() {
         const username = emailInput.value;
         const password = pwInput.value;
 
-        const user = {
-          username,
-          password,
-        };
+        const user = { username, password };
 
         axios
           .post(`${url}/admin/signin`, user)
           .then((res) => {
-            console.log(res);
+            console.log(res.data);
+            token = res.data.token; // Save the token
+            axios.defaults.headers.common["Authorization"] = token; // Set default Authorization header
+            alert("登入成功！");
           })
           .catch((error) => {
             console.dir(error);
+            alert("登入失敗，請檢查帳號密碼");
           });
-        // #2 發送 API 至遠端並登入（並儲存 Token）
       }
 
       checkBtn.addEventListener("click", checkLogin);
-      function checkLogin(params) {
-        // #3 取得 Token（Token 僅需要設定一次）
-        // #4  確認是否登入
+
+      function checkLogin() {
+        axios
+          .post(`${url}/api/user/check`)
+          .then((res) => {
+            console.log("登入狀態：", res.data);
+            alert("使用者已登入");
+          })
+          .catch((error) => {
+            console.dir(error);
+            alert("使用者未登入");
+          });
       }
 
       getProductsBtn.addEventListener("click", getProducts);
+
       function getProducts() {
-        // #5 取得後台產品列表
+        axios
+          .get(`${url}/api/${path}/admin/products/all`)
+          .then((res) => {
+            console.log("產品列表：", res.data.products);
+            alert("產品列表已顯示於主控台");
+          })
+          .catch((error) => {
+            console.dir(error);
+            alert("無法取得產品列表");
+          });
       }
 
       addProductBtn.addEventListener("click", addProduct);
+
       function addProduct() {
         const product = {
           data: {
@@ -85,12 +105,35 @@
           },
         };
 
-        // #6 新增一個產品
+        axios
+          .post(`${url}/api/${path}/admin/product`, product)
+          .then((res) => {
+            console.log("新增產品成功：", res.data);
+            alert("產品已新增！");
+          })
+          .catch((error) => {
+            console.dir(error);
+            alert("無法新增產品");
+          });
       }
 
       delProductBtn.addEventListener("click", removeProduct);
+
       function removeProduct() {
-        // #7 刪除一個產品
+        const productId = prompt("請輸入要刪除的產品 ID：");
+
+        if (productId) {
+          axios
+            .delete(`${url}/api/${path}/admin/product/${productId}`)
+            .then((res) => {
+              console.log("刪除產品成功：", res.data);
+              alert("產品已刪除！");
+            })
+            .catch((error) => {
+              console.dir(error);
+              alert("無法刪除產品");
+            });
+        }
       }
     </script>
   </body>
